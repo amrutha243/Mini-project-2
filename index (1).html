@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Horizon Bank - Management System</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --border: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            font-size: 1.25rem;
+            color: var(--primary);
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 8px;
+        }
+
+        .balance-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--success);
+            margin: 10px 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 10px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        .text-deposit { color: var(--success); font-weight: bold; }
+        .text-withdraw { color: var(--danger); font-weight: bold; }
+
+        .message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .msg-success { background-color: #d1fae5; color: #065f46; display: block; }
+        .msg-error { background-color: #fee2e2; color: #991b1b; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Apex Horizon Bank</h1>
+        <p>Dashboard & Transaction Management System</p>
+    </header>
+
+    <div id="msgBox" class="message"></div>
+
+    <div class="grid">
+        <div class="col">
+            <div class="card">
+                <h2>Account Summary</h2>
+                <p><strong>Account Holder:</strong> <span id="lblHolder">John Doe</span></p>
+                <p><strong>Account Number:</strong> AC-882910</p>
+                <div class="balance-display">$<span id="lblBalance">0.00</span></div>
+            </div>
+
+            <div class="card">
+                <h2>New Transaction</h2>
+                <form id="transactionForm">
+                    <div class="form-group">
+                        <label for="transType">Transaction Type</label>
+                        <select id="transType" required>
+                            <option value="deposit">Deposit</option>
+                            <option value="withdraw">Withdrawal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Amount ($)</label>
+                        <input type="number" id="amount" min="0.01" step="0.01" placeholder="Enter amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" placeholder="e.g., Salary, Groceries" required>
+                    </div>
+                    <button type="submit" class="btn">Submit Transaction</button>
+                </form>
+            </div>
+
+            <button id="btnReset" class="btn btn-danger">Reset Account Data</button>
+        </div>
+
+        <div class="col">
+            <div class="card">
+                <h2>Transaction History</h2>
+                <div style="overflow-x: auto;">
+                    <table id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- STATE MANAGEMENT ---
+    let account = {
+        holder: "John Doe",
+        balance: 1000.00, // Initial default balance
+        history: [
+            { date: new Date().toLocaleDateString(), desc: "Initial Deposit", type: "deposit", amount: 1000.00 }
+        ]
+    };
+
+    // Load data from LocalStorage if it exists
+    if (localStorage.getItem("bank_account")) {
+        account = JSON.parse(localStorage.getItem("bank_account"));
+    }
+
+    // --- DOM ELEMENTS ---
+    const lblBalance = document.getElementById("lblBalance");
+    const lblHolder = document.getElementById("lblHolder");
+    const historyBody = document.getElementById("historyBody");
+    const transactionForm = document.getElementById("transactionForm");
+    const msgBox = document.getElementById("msgBox");
+    const btnReset = document.getElementById("btnReset");
+
+    // --- FUNCTIONS ---
+    function updateUI() {
+        // Update balance and text elements
+        lblBalance.textContent = account.balance.toFixed(2);
+        lblHolder.textContent = account.holder;
+
+        // Render table rows
+        historyBody.innerHTML = "";
+        
+        // Render history in reverse order (Newest transactions first)
+        [...account.history].reverse().forEach(tx => {
+            const row = document.createElement("tr");
+            
+            const typeClass = tx.type === "deposit" ? "text-deposit" : "text-withdraw";
+            const typeText = tx.type.charAt(0).toUpperCase() + tx.type.slice(1);
+            const prefix = tx.type === "deposit" ? "+" : "-";
+
+            row.innerHTML = `
+                <td>${tx.date}</td>
+                <td>${tx.desc}</td>
+                <td class="${typeClass}">${typeText}</td>
+                <td class="${typeClass}">${prefix}$${tx.amount.toFixed(2)}</td>
+            `;
+            historyBody.appendChild(row);
+        });
+
+        // Save to storage
+        localStorage.setItem("bank_account", JSON.stringify(account));
+    }
+
+    function showMessage(text, isSuccess) {
+        msgBox.textContent = text;
+        msgBox.className = `message ${isSuccess ? 'msg-success' : 'msg-error'}`;
+        
+        // Hide message after 4 seconds
+        setTimeout(() => {
+            msgBox.className = "message";
+        }, 4000);
+    }
+
+    // --- EVENT LISTENERS ---
+    transactionForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const type = document.getElementById("transType").value;
+        const amount = parseFloat(document.getElementById("amount").value);
+        const desc = document.getElementById("description").value.trim();
+
+        if (isNaN(amount) || amount <= 0) {
+            showMessage("Please enter a valid positive amount.", false);
+            return;
+        }
+
+        if (type === "withdraw" && amount > account.balance) {
+            showMessage("Transaction Declined: Insufficient funds.", false);
+            return;
+        }
+
+        // Process Transaction
+        if (type === "deposit") {
+            account.balance += amount;
+        } else {
+            account.balance -= amount;
+        }
+
+        // Add to history array
+        account.history.push({
+            date: new Date().toLocaleDateString(),
+            desc: desc,
+            type: type,
+            amount: amountpi
+        });
+
+        // Update UI and Storage
+        updateUI();
+        showMessage(`Successfully processed ${type} of $${amount.toFixed(2)}`, true);
+        
+        // Reset Form Fields
+        transactionForm.reset();
+    });
+
+    btnReset.addEventListener("click", function() {
+        if(confirm("Are you sure you want to clear all data and reset to initial settings?")) {
+            localStorage.removeItem("bank_account");
+            window.location.reload();
+        }
+    });
+
+    // Initial setup display
+    updateUI();
+</script>
+
+</body>
+</html>
